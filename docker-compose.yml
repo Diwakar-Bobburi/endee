@@ -1,11 +1,12 @@
 services:
   endee-oss:
-    image: endee-oss:latest
+    build:
+      context: .
+      dockerfile: infra/Dockerfile
     container_name: endee-oss
     ports:
       - "8080:8080"
-    ulimits:
-      nofile: 100000
+
 # ----------------------------------------------------
 # Logging Configuration Block
     logging:
