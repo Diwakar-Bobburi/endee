@@ -20,3 +20,5 @@ data/*
 # Frontend
 frontend/
 frontend/*
+
+__pycache__/
