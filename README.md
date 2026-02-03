@@ -126,7 +126,7 @@ Generate embeddings
 Store vectors in an Endee-compatible format
 
 Step 2: Ask Questions (RAG)
-python app/main.py
+python -m app.main
 
 
 Example:
@@ -142,4 +142,4 @@ Set the API key:
 set GEMINI_API_KEY=your_api_key_here
 
 
-If the Gemini API is unavailable, the system gracefully falls back to returning the most relevant retrieved context.
+If the `GEMINI_API_KEY` environment variable is not set, the system will safely fall back to returning answers based on retrieved document context.
