@@ -1,55 +1,46 @@
 import os
-from google import genai
-from retriever import retrieve_top_k
-
-# Initialize Gemini client
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+import google.genai as genai
+from app.retriever import retrieve_top_k
 
 
-def build_prompt(question, retrieved_chunks):
-    context = "\n\n".join(
-        [f"- {meta['text']}" for _, meta in retrieved_chunks]
-    )
+def generate_answer(query):
+    # Step 1: Retrieve context
+    context = retrieve_top_k(query)
 
-    return f"""
-You are an intelligent assistant.
-Answer the question using ONLY the context below.
-If the answer is not in the context, say "I don't know".
+    if not context:
+        return "No relevant context found."
+
+    prompt = f"""
+Use the following context to answer the question.
 
 Context:
 {context}
 
 Question:
-{question}
-
-Answer:
+{query}
 """
 
+    # Step 2: Check API key
+    api_key = os.getenv("GEMINI_API_KEY")
 
-def generate_answer(question):
-    print("🔎 Retrieving relevant context...")
-    retrieved = retrieve_top_k(question, k=3)
+    if not api_key:
+        return (
+            "[LLM disabled – GEMINI_API_KEY not set]\n\n"
+            "Retrieved context:\n"
+            f"{context}"
+        )
 
-    prompt = build_prompt(question, retrieved)
-
+    # Step 3: Call Gemini safely
     try:
-        print("🧠 Generating answer with Gemini...")
+        client = genai.Client(api_key=api_key)
         response = client.models.generate_content(
-            model="gemini-1.0-pro",
+            model="gemini-1.5-flash",
             contents=prompt
         )
         return response.text
 
-    except Exception as e:
-        print("⚠️ Gemini model unavailable, returning context-based answer")
-        return "\n\n".join(
-            [meta["text"] for _, meta in retrieved]
+    except Exception:
+        return (
+            "[LLM error – fallback to retrieved context]\n\n"
+            f"{context}"
         )
-
-
-
-if __name__ == "__main__":
-    q = input("Ask a question: ")
-    answer = generate_answer(q)
-    print("\n💡 Answer:\n")
-    print(answer)
